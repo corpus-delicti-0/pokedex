@@ -7,10 +7,15 @@ import (
 	"strings"
 )
 
+type config struct {
+	next     string
+	previous string
+}
+
 type cliCommand struct {
 	name        string
 	description string
-	callback    func() error
+	callback    func(*config) error
 }
 
 var registry = map[string]cliCommand{
@@ -23,6 +28,16 @@ var registry = map[string]cliCommand{
 		name:        "help",
 		description: "Displays a help message",
 		callback:    commandHelp,
+	},
+	"map": {
+		name:        "map",
+		description: "Displays the next 20 location areas",
+		callback:    commandMap,
+	},
+	"mapb": {
+		name:        "mapb",
+		description: "Displays the previous 20 location areas",
+		callback:    commandMapb,
 	},
 }
 
@@ -38,6 +53,7 @@ func cleanInput(text string) []string {
 }
 
 func runREPL() error {
+	cfg := &config{}
 	scanner := bufio.NewScanner(os.Stdin)
 	for {
 		fmt.Print("Pokedex > ")
@@ -53,7 +69,7 @@ func runREPL() error {
 		if !ok {
 			fmt.Println("Unknown command")
 		} else {
-			err := command.callback()
+			err := command.callback(cfg)
 			if err != nil {
 				fmt.Println(err)
 			}
