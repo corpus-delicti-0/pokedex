@@ -5,23 +5,28 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
+
+	"github.com/corpus-delicti-0/pokedex/internal/pokecache"
 )
 
 type config struct {
 	next     string
 	previous string
+	cache    *pokecache.Cache
+	pokedex  map[string]Pokemon
 }
 
 type cliCommand struct {
 	name        string
 	description string
-	callback    func(*config) error
+	callback    func(*config, ...string) error //...string means the command can receive zero or more arguments
 }
 
 var registry = map[string]cliCommand{
 	"exit": {
 		name:        "exit",
-		description: "Exit the Pokedex",
+		description: "Exit the Pokédex",
 		callback:    commandExit,
 	},
 	"help": {
@@ -39,6 +44,16 @@ var registry = map[string]cliCommand{
 		description: "Displays the previous 20 location areas",
 		callback:    commandMapb,
 	},
+	"explore": {
+		name:        "explore",
+		description: "Explores a location area",
+		callback:    commandExplore,
+	},
+	"catch": {
+		name:        "catch",
+		description: "Attempts to catch a Pokémon",
+		callback:    commandCatch,
+	},
 }
 
 func cleanInput(text string) []string {
@@ -53,7 +68,10 @@ func cleanInput(text string) []string {
 }
 
 func runREPL() error {
-	cfg := &config{}
+	cfg := &config{
+		cache:   pokecache.NewCache(5 * time.Minute),
+		pokedex: make(map[string]Pokemon),
+	}
 	scanner := bufio.NewScanner(os.Stdin)
 	for {
 		fmt.Print("Pokedex > ")
@@ -69,7 +87,7 @@ func runREPL() error {
 		if !ok {
 			fmt.Println("Unknown command")
 		} else {
-			err := command.callback(cfg)
+			err := command.callback(cfg, result[1:]...) //result[1:] produces the arg slice and ... passes its elements into variadic func
 			if err != nil {
 				fmt.Println(err)
 			}

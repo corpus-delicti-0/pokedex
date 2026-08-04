@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
 )
 
 type locationArea struct {
@@ -18,20 +17,20 @@ type locationAreaResponse struct {
 }
 
 func fetchMap(cfg *config, url string) error {
-	response, err := http.Get(url)
+	data, err := fetchData(cfg, url)
 	if err != nil {
 		return err
-	}
-	defer response.Body.Close()
-
-	if response.StatusCode != http.StatusOK {
-		return fmt.Errorf("request failed: %s", response.Status)
 	}
 
 	locationData := locationAreaResponse{}
 
-	decoder := json.NewDecoder(response.Body)
+	/*decoder := json.NewDecoder(response.Body)
 	err = decoder.Decode(&locationData)
+	if err != nil {
+		return err
+	}*/
+
+	err = json.Unmarshal(data, &locationData)
 	if err != nil {
 		return err
 	}
@@ -46,16 +45,16 @@ func fetchMap(cfg *config, url string) error {
 	return nil
 }
 
-func commandMap(cfg *config) error {
+func commandMap(cfg *config, _ ...string) error {
 	url := cfg.next
 	if url == "" {
-		url = "https://pokeapi.co/api/v2/location-area"
+		url = "https://pokeapi.co/api/v2/location-area?offset=0&limit=20"
 	}
 
 	return fetchMap(cfg, url)
 }
 
-func commandMapb(cfg *config) error {
+func commandMapb(cfg *config, _ ...string) error {
 	if cfg.previous == "" {
 		fmt.Println("You're on the first page")
 		return nil
