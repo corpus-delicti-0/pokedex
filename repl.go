@@ -59,6 +59,11 @@ var registry = map[string]cliCommand{
 		description: "Displays details about a caught Pokémon",
 		callback:    commandInspect,
 	},
+	"pokedex": {
+		name:        "pokedex",
+		description: "Displays all caught Pokémon",
+		callback:    commandPokedex,
+	},
 }
 
 func cleanInput(text string) []string {
